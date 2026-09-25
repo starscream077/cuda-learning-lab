@@ -1,0 +1,28 @@
+# --- Build artifacts ---
+*.o
+*.obj
+*.out
+*.exe
+*.exp
+*.lib
+*.ptx
+*.cubin
+*.fatbin
+
+# --- Profiler output (large, regenerable) ---
+*.nsys-rep
+*.ncu-rep
+*.sqlite
+report*/
+
+# --- Test data / images used for stencil & blur projects ---
+*.ppm
+*.pgm
+/tier1-fundamentals/04-image-blur/test-images/output/
+
+# --- OS/editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
