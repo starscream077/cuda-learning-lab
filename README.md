@@ -1,6 +1,6 @@
 # CUDA Learning Lab
 
-Working through the CUDA project ladder — from vector addition to a toy flash-attention-style kernel — as foundational GPU knowledge underpinning the AI infra work in the companion repo, `ai-homelab-infra`.
+Working through the CUDA project ladder — from vector addition to a toy flash-attention-style kernel — as foundational GPU knowledge underpinning the AI infra work in the companion repo, [`ai-homelab-infra`](https://github.com/starscream077/ai-homelab-infra).
 
 Full step-by-step guide with explanations and resources: [`docs/cuda-learning-guide.md`](docs/cuda-learning-guide.md)
 
