@@ -9,7 +9,7 @@ A step-by-step companion for working through the CUDA project ladder.
 I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few steps I've followed to set it up:
 
 - Create a Windows recovery drive (mandatory, I had issues with copying system files, sfc scan and clean up image didn't work. Luckily I had a drive which I created right after I got the machine)
-- Shrink disks to create new partitions. I couldn't go beyond 85 Gb on my 512 Gb disk (this video helped in shrinking more - https://youtu.be/TxDNyBA83lE?si=4-Rd_6cCfdSUhcwD)
+- Shrink disks to create new partitions. I couldn't go beyond 85 Gb on my 512 Gb disk (this (video)[https://youtu.be/TxDNyBA83lE?si=4-Rd_6cCfdSUhcwD] helped in shrinking more)
 - Disable Intel RST - needed for Ubuntu install (booted Windows in safe more, entered BIOS setup, set SATA operation to AHCI)
 - Install Ubuntu using live USB
 
@@ -19,7 +19,7 @@ I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few
 - [ ] Editor: VS Code with the "Nsight Visual Studio Code Edition" extension gives syntax highlighting + debugging for `.cu` files.
 - [ ] Compile-and-run loop for every project:
   ```bash
-  nvcc -arch=sm_75 -O3 my_kernel.cu -o my_kernel   # sm_75 = Turing = your GTX 1650
+  nvcc -arch=sm_75 -O3 my_kernel.cu -o my_kernel   # sm_75 = Turing = GTX 1650
   ./my_kernel
   ```
 - [ ] Verify card and its specs (need these numbers for tuning later):
@@ -29,7 +29,7 @@ I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few
   For GTX 1650 (mobile): expecting ~4GB VRAM, compute capability 7.5, 1024 CUDA cores, 32 threads/warp, max 1024 threads/block.
 
 **Core mental model:**
-- **Thread** → smallest unit of execution, runs your kernel function once.
+- **Thread** → smallest unit of execution, runs kernel function once.
 - **Block** → a group of threads (up to 1024) that can share fast on-chip "shared memory" and synchronize with `__syncthreads()`.
 - **Grid** → all the blocks launched for one kernel call.
 - **Warp** → a group of 32 threads that physically execute in lockstep on the hardware. This is why divergent branching (`if` statements that split a warp's threads down different paths) is expensive — it's the single most important hardware fact in CUDA.
@@ -54,12 +54,12 @@ I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few
        if (i < n) C[i] = A[i] + B[i];
    }
    ```
-5. Launch it: `vecAdd<<<(n+255)/256, 256>>>(d_A, d_B, d_C, n);` — the `(n+255)/256` is the standard "round up" pattern so you always launch enough blocks to cover `n` elements.
+5. Launch it: `vecAdd<<<(n+255)/256, 256>>>(d_A, d_B, d_C, n);` — the `(n+255)/256` is the standard "round up" pattern so we always launch enough blocks to cover `n` elements.
 6. Copy the result back: `cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost)`.
 7. Free device memory with `cudaFree`.
 8. Verify correctness against a simple CPU loop computing the same thing.
 
-**Watch for:** forgetting the `if (i < n)` bounds check — when `n` isn't a multiple of your block size, extra threads will write out of bounds without it.
+**Watch for:** forgetting the `if (i < n)` bounds check — when `n` isn't a multiple of block size, extra threads will write out of bounds without it.
 
 ---
 
@@ -102,7 +102,7 @@ I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few
 5. **v4 — first add during load:** halve the number of blocks by having each thread load and add two elements before the reduction loop even starts.
 6. **v5 — unroll the last warp:** once `s <= 32`, I'll be down to one warp — no `__syncthreads()` needed since a warp is already in lockstep; unroll this manually.
 7. **v6 — fully unrolled + template on block size:** use C++ templates so the compiler unrolls the entire loop at compile time.
-8. For each version, print elapsed time and computed **effective bandwidth** (bytes read+written / time) — watch the number climb toward card's peak memory bandwidth as you go from v0 to v6.
+8. For each version, print elapsed time and computed **effective bandwidth** (bytes read+written / time) — watch the number climb toward card's peak memory bandwidth as we go from v0 to v6.
 
 **Resource for this one specifically:** Mark Harris's original NVIDIA slide deck "Optimizing Parallel Reduction in CUDA" is the canonical reference — https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf; nearly every course references this exact progression.
 
@@ -262,13 +262,13 @@ I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few
 
 **Steps:**
 1. Naive softmax needs two passes: one to find the max (for numerical stability), one to compute `exp(x - max)` and sum, plus a third to divide. Implement this first for correctness.
-2. Implement the **online (single-pass) softmax**: maintain a running max `m` and running sum `l`, and when a new, larger max is found, *rescale* the running sum by `exp(old_m - new_m)` before continuing — this is the trick that lets you process data in one pass without knowing the max in advance.
+2. Implement the **online (single-pass) softmax**: maintain a running max `m` and running sum `l`, and when a new, larger max is found, *rescale* the running sum by `exp(old_m - new_m)` before continuing — this is the trick that lets us process data in one pass without knowing the max in advance.
 3. This exact technique is the numerical core of flash-attention (Project 18) — implementing it standalone first, on a plain 1D array, makes the attention version far less intimidating later.
 
 ### Project 16: LayerNorm/RMSNorm Kernel
 
 **Steps:**
-1. For each row of a `[batch, features]` tensor, compute mean and variance (LayerNorm) or just mean-square (RMSNorm, what most modern LLMs use), using a block-level reduction (reuse your Project 3 skills directly).
+1. For each row of a `[batch, features]` tensor, compute mean and variance (LayerNorm) or just mean-square (RMSNorm, what most modern LLMs use), using a block-level reduction (reuse Project 3 skills directly).
 2. Normalize: `(x - mean) / sqrt(variance + eps)`, then scale/shift by learned parameters `gamma`/`beta`.
 3. Fuse it into as few kernel launches as possible — ideally one kernel per row, using shared memory for the reduction, rather than separate kernels for mean/variance/normalize.
 
@@ -306,7 +306,7 @@ Apply this exact loop to **every** project above once it's correct:
    ```bash
    compute-sanitizer ./my_kernel
    ```
-2. **Timeline view — `nsys`.** Confirms whether your kernel is even the bottleneck (vs. memcpy or launch overhead).
+2. **Timeline view — `nsys`.** Confirms whether kernel is even the bottleneck (vs. memcpy or launch overhead).
    ```bash
    nsys profile -o report ./my_kernel
    nsys stats report.nsys-rep
