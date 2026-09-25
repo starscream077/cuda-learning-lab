@@ -9,7 +9,7 @@ A step-by-step companion for working through the CUDA project ladder.
 I'm using Ubuntu in dual-boot, installed on my personal computer. Here are a few steps I've followed to set it up:
 
 - Create a Windows recovery drive (mandatory, I had issues with copying system files, sfc scan and clean up image didn't work. Luckily I had a drive which I created right after I got the machine)
-- Shrink disks to create new partitions. I couldn't go beyond 85 Gb on my 512 Gb disk (this (video)[https://youtu.be/TxDNyBA83lE?si=4-Rd_6cCfdSUhcwD] helped in shrinking more)
+- Shrink disks to create new partitions. I couldn't go beyond 85 Gb on my 512 Gb disk (this [video](https://youtu.be/TxDNyBA83lE?si=4-Rd_6cCfdSUhcwD) helped in shrinking more)
 - Disable Intel RST - needed for Ubuntu install (booted Windows in safe more, entered BIOS setup, set SATA operation to AHCI)
 - Install Ubuntu using live USB
 
